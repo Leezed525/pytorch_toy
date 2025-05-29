@@ -1,2 +1,4 @@
 .idea/
 *.pth
+*.gz
+dataset_file/mnist_jpg
