@@ -213,26 +213,43 @@ class MainWindow(QMainWindow):
             Qt.AspectRatioMode.IgnoreAspectRatio,  # 不保持宽高比
             Qt.TransformationMode.SmoothTransformation  # 平滑缩放
         )
-        print(scaled_image.size())
         # 转换为 8 位灰度图
         grayscale_image = scaled_image.convertToFormat(QImage.Format.Format_Grayscale8)
 
+        # 使用 qimage2ndarray.byte_view() 获取 NumPy 数组
         arr_3d = qimage2ndarray.byte_view(grayscale_image)
-        arr = arr_3d.squeeze()  # (H,W,1) -> (H,W)
+        arr = arr_3d.squeeze()
 
-        # 将 NumPy 数组转换为 PyTorch 张量并归一化
-        # unsqueeze(0) 两次是为了将形状从 (H, W) 变为 (1, 1, H, W)
-        # 将 NumPy 数组转换为 PyTorch 张量并归一化
-        tensor_image = (torch.from_numpy(arr).float().unsqueeze(0).unsqueeze(0) / 255.0).cuda()
+        # 将 NumPy 数组转换为 PyTorch 张量
+        tensor_image = torch.from_numpy(arr).float()
+
+        # --- 关键修正：添加颜色反转和标准化 ---
+        # 1. 将像素值从 [0, 255] 归一化到 [0.0, 1.0]
+        tensor_image = tensor_image / 255.0
+
+        # 2. 颜色反转：如果你的模型是基于白色数字黑色背景训练的 而画布是黑色数字白色背景，则需要反转颜色
         tensor_image = 1.0 - tensor_image
 
+        # 3. 标准化：应用训练时使用的均值和标准差
+        # MNIST 均值和标准差
+        mean = 0.1307
+        std = 0.3081
+        tensor_image = (tensor_image - mean) / std
+
+        # 添加批次维度和通道维度，使形状变为 (1, 1, 28, 28)
+        tensor_image = tensor_image.unsqueeze(0).unsqueeze(0).cuda()
+
         # --- 可视化 PyTorch 张量 ---
-        # plt.figure(figsize=(2, 2))  # 创建另一个 Matplotlib 图
-        # # 将 PyTorch 张量转回 CPU，并移除单维度，再转为 NumPy 数组
-        # plt.imshow(tensor_image.cpu().squeeze().numpy(), cmap='gray')
-        # plt.title("input img (28x28)")
-        # plt.axis('off')  # 不显示坐标轴
-        # plt.show()  # 显示所有打开的 Matplotlib 图并阻塞，直到图被关闭
+        # 为了可视化，我们先将其恢复到 [0,1] 范围，否则标准化后的值可能很难看
+        # 逆标准化 (用于可视化，不影响模型输入)
+        visual_tensor = tensor_image * std + mean
+        # 确保在 [0,1] 范围内
+        visual_tensor = torch.clamp(visual_tensor, 0.0, 1.0)
+        plt.figure(figsize=(2, 2))
+        plt.imshow(visual_tensor.cpu().squeeze().numpy(), cmap='gray')
+        plt.title("input")
+        plt.axis('off')
+        plt.show()
         return tensor_image
 
     def predict(self):
@@ -249,6 +266,9 @@ class MainWindow(QMainWindow):
         probabilities = torch.softmax(output, dim=1).cpu().numpy()
         print(probabilities)
 
+        _, predicted = output.max(1)
+        print(predicted)
+
     def get_net(self):
         """
         获取数字预测模型。
@@ -258,7 +278,7 @@ class MainWindow(QMainWindow):
         net = DigitCNN()
         net.eval()
         net.cuda()
-        # net.load_state_dict(torch.load('./digit_model.pth'))
+        net.load_state_dict(torch.load('./digit_CNN.pth'))
         return net
 
 
