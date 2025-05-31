@@ -1,12 +1,8 @@
 import sys
 # 导入 PyQt6 相关的模块
-# QtWidgets 包含了 GUI 控件，如 QApplication, QMainWindow, QWidget, QVBoxLayout, QPushButton
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QPushButton, QHBoxLayout, QLabel
-# QtGui 包含了绘图相关的类，如 QPainter, QPen, QColor, QImage
 from PyQt6.QtGui import QPainter, QPen, QColor, QImage
-# QtCore 包含了核心的非 GUI 功能，如 Qt, QPoint
 from PyQt6.QtCore import Qt, QPoint
-import numpy as np
 
 import qimage2ndarray  # 用于将 QImage 转换为 NumPy 数组
 
@@ -59,12 +55,7 @@ class DrawingCanvas(QWidget):
         painter.drawImage(self.rect(), self.image, self.image.rect())
 
     def mousePressEvent(self, event):
-        """
-        鼠标按下事件处理函数。
-        当用户按下鼠标按钮时触发。
-        """
         # 检查是否是鼠标左键被按下。
-        # 在 PyQt6 中，鼠标按钮常量通过 Qt.MouseButton 枚举访问。
         if event.button() == Qt.MouseButton.LeftButton:
             self.drawing = True  # 设置绘图标志为 True
             self.last_point = event.pos()  # 记录当前鼠标位置作为线条的起始点
@@ -78,8 +69,7 @@ class DrawingCanvas(QWidget):
         # event.buttons() 返回当前按下的所有鼠标按钮的位掩码，Qt.MouseButton.LeftButton 用于检查左键是否按下。
         if self.drawing and event.buttons() & Qt.MouseButton.LeftButton:
             painter = QPainter(self.image)  # 在 QImage (绘图缓冲区) 上创建 QPainter 进行绘制
-            # 设置画笔的属性：颜色、粗细、线条样式、笔帽样式和连接样式。
-            # 在 PyQt6 中，这些样式常量现在分别通过 Qt.PenStyle, Qt.PenCapStyle, Qt.PenJoinStyle 枚举访问。
+            # 设置画笔的颜色、粗细和样式。
             painter.setPen(QPen(QColor(self.pen_color), self.pen_size,
                                 Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
             # 绘制从上次记录的点到当前鼠标位置的直线
@@ -118,20 +108,6 @@ class DrawingCanvas(QWidget):
         """
         self.image.fill(Qt.GlobalColor.white)
         self.update()  # 请求重绘以显示空白画布
-
-    def set_pen_color(self, color_name):
-        """
-        根据传入的颜色名称字符串设置画笔颜色。
-        """
-        color_map = {
-            "black": Qt.GlobalColor.black,
-            "red": Qt.GlobalColor.red,
-            "blue": Qt.GlobalColor.blue,
-            "green": Qt.GlobalColor.green,
-            "yellow": Qt.GlobalColor.yellow
-        }
-        # 从映射中获取颜色，如果找不到则默认为黑色
-        self.pen_color = color_map.get(color_name, Qt.GlobalColor.black)
 
     def set_pen_size(self, size):
         """
@@ -264,9 +240,8 @@ class MainWindow(QMainWindow):
         # 获取预测结果
         self.update_predict_result(output)
 
-
-    def update_predict_result(self,output):
-        _,predict = output.max(1)  # 获取预测的数字类别
+    def update_predict_result(self, output):
+        _, predict = output.max(1)  # 获取预测的数字类别
         predict = predict.cpu().numpy()[0]
         # 更新预测结果标签
         self.predict_label.setText(f"预测结果: {predict}")
@@ -274,8 +249,6 @@ class MainWindow(QMainWindow):
         probabilities = torch.softmax(output, dim=1).cpu().numpy()[0]
         for i, label in enumerate(self.predict_digit_labels):
             label.setText(f"数字 {i}: {probabilities[i] * 100:.2f}%")
-
-
 
     def get_net(self):
         """
