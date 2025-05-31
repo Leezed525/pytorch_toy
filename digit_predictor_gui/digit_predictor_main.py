@@ -172,8 +172,8 @@ class MainWindow(QMainWindow):
         operation_layer.addLayout(left_operation_layer)  # 将左侧操作区域布局添加到操作层布局中
         # 右侧操作区域
 
-        predict_label = QLabel("预测结果: ")  # 创建一个标签，显示预测结果
-        right_operation_layer.addWidget(predict_label)
+        self.predict_label = QLabel("预测结果: ")  # 创建一个标签，显示预测结果
+        right_operation_layer.addWidget(self.predict_label)
         self.predict_digit_labels = []
         for i in range(10):
             predict_digit_label = QLabel(f"数字 {i}: 0.00%")  # 创建标签显示每个数字的预测概率
@@ -242,14 +242,14 @@ class MainWindow(QMainWindow):
         # --- 可视化 PyTorch 张量 ---
         # 为了可视化，我们先将其恢复到 [0,1] 范围，否则标准化后的值可能很难看
         # 逆标准化 (用于可视化，不影响模型输入)
-        visual_tensor = tensor_image * std + mean
-        # 确保在 [0,1] 范围内
-        visual_tensor = torch.clamp(visual_tensor, 0.0, 1.0)
-        plt.figure(figsize=(2, 2))
-        plt.imshow(visual_tensor.cpu().squeeze().numpy(), cmap='gray')
-        plt.title("input")
-        plt.axis('off')
-        plt.show()
+        # visual_tensor = tensor_image * std + mean
+        # # 确保在 [0,1] 范围内
+        # visual_tensor = torch.clamp(visual_tensor, 0.0, 1.0)
+        # plt.figure(figsize=(2, 2))
+        # plt.imshow(visual_tensor.cpu().squeeze().numpy(), cmap='gray')
+        # plt.title("input")
+        # plt.axis('off')
+        # plt.show()
         return tensor_image
 
     def predict(self):
@@ -262,12 +262,20 @@ class MainWindow(QMainWindow):
         with torch.no_grad():
             output = self.net(input)
         # 获取预测结果
-        print(output)
-        probabilities = torch.softmax(output, dim=1).cpu().numpy()
-        print(probabilities)
+        self.update_predict_result(output)
 
-        _, predicted = output.max(1)
-        print(predicted)
+
+    def update_predict_result(self,output):
+        _,predict = output.max(1)  # 获取预测的数字类别
+        predict = predict.cpu().numpy()[0]
+        # 更新预测结果标签
+        self.predict_label.setText(f"预测结果: {predict}")
+        # 更新每个数字的预测概率
+        probabilities = torch.softmax(output, dim=1).cpu().numpy()[0]
+        for i, label in enumerate(self.predict_digit_labels):
+            label.setText(f"数字 {i}: {probabilities[i] * 100:.2f}%")
+
+
 
     def get_net(self):
         """
