@@ -6,6 +6,20 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QPu
 from PyQt6.QtGui import QPainter, QPen, QColor, QImage
 # QtCore 包含了核心的非 GUI 功能，如 Qt, QPoint
 from PyQt6.QtCore import Qt, QPoint
+import numpy as np
+
+import qimage2ndarray  # 用于将 QImage 转换为 NumPy 数组
+
+import torch
+from lib.model.DigitModel import DigitCNN
+
+import matplotlib
+
+try:
+    matplotlib.use('QtAgg')  # 尝试使用 QtAgg 后端
+except ImportError:
+    matplotlib.use('TkAgg')  # 如果 QtAgg 不可用，则回退到 TkAgg
+import matplotlib.pyplot as plt  # 用于显示图像
 
 
 class DrawingCanvas(QWidget):
@@ -32,7 +46,7 @@ class DrawingCanvas(QWidget):
 
         # 同样，颜色常量需要通过 Qt.GlobalColor 访问。
         self.pen_color = Qt.GlobalColor.black
-        self.pen_size = 5
+        self.pen_size = 20
 
     def paintEvent(self, event):
         """
@@ -129,6 +143,7 @@ class DrawingCanvas(QWidget):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.net = self.get_net()  # 获取数字预测模型
         self.setWindowTitle("PyQt 数字预测")
         self.setGeometry(100, 100, 500, 550)  # 设置主窗口的初始位置和大小，留出空间给按钮
 
@@ -159,11 +174,11 @@ class MainWindow(QMainWindow):
 
         predict_label = QLabel("预测结果: ")  # 创建一个标签，显示预测结果
         right_operation_layer.addWidget(predict_label)
-        predict_digit_labels = []
+        self.predict_digit_labels = []
         for i in range(10):
             predict_digit_label = QLabel(f"数字 {i}: 0.00%")  # 创建标签显示每个数字的预测概率
-            predict_digit_labels.append(predict_digit_label)  # 将标签添加到列表中
-        for label in predict_digit_labels:
+            self.predict_digit_labels.append(predict_digit_label)  # 将标签添加到列表中
+        for label in self.predict_digit_labels:
             right_operation_layer.addWidget(label)
 
         operation_layer.addLayout(right_operation_layer)  # 将右侧操作区域布局添加到操作层布局中
@@ -178,13 +193,73 @@ class MainWindow(QMainWindow):
         clear_button.clicked.connect(self.canvas.clear_canvas)  # 连接按钮的点击信号到清空画布方法
 
         predict_button = QPushButton("预测")  # 清空画布按钮
-        predict_button.clicked.connect(self.canvas.clear_canvas)  # 连接按钮的点击信号到清空画布方法
+        predict_button.clicked.connect(self.predict)  # 连接按钮的点击信号到预测方法
 
         button_layout.addStretch(6)
         button_layout.addWidget(clear_button)
         button_layout.addWidget(predict_button)
 
         layout.addLayout(button_layout)  # 将按钮布局添加到主布局中
+
+    def get_image(self):
+        """
+        获取当前画布上的图像数据。
+        返回一个 QImage 对象，包含当前画布的绘图内容。
+        """
+        image = self.canvas.image
+        # 将图像缩放到 28x28 像素并转换为灰度图
+        scaled_image = image.scaled(
+            28, 28,
+            Qt.AspectRatioMode.IgnoreAspectRatio,  # 不保持宽高比
+            Qt.TransformationMode.SmoothTransformation  # 平滑缩放
+        )
+        print(scaled_image.size())
+        # 转换为 8 位灰度图
+        grayscale_image = scaled_image.convertToFormat(QImage.Format.Format_Grayscale8)
+
+        arr_3d = qimage2ndarray.byte_view(grayscale_image)
+        arr = arr_3d.squeeze()  # (H,W,1) -> (H,W)
+
+        # 将 NumPy 数组转换为 PyTorch 张量并归一化
+        # unsqueeze(0) 两次是为了将形状从 (H, W) 变为 (1, 1, H, W)
+        # 将 NumPy 数组转换为 PyTorch 张量并归一化
+        tensor_image = (torch.from_numpy(arr).float().unsqueeze(0).unsqueeze(0) / 255.0).cuda()
+        tensor_image = 1.0 - tensor_image
+
+        # --- 可视化 PyTorch 张量 ---
+        # plt.figure(figsize=(2, 2))  # 创建另一个 Matplotlib 图
+        # # 将 PyTorch 张量转回 CPU，并移除单维度，再转为 NumPy 数组
+        # plt.imshow(tensor_image.cpu().squeeze().numpy(), cmap='gray')
+        # plt.title("input img (28x28)")
+        # plt.axis('off')  # 不显示坐标轴
+        # plt.show()  # 显示所有打开的 Matplotlib 图并阻塞，直到图被关闭
+        return tensor_image
+
+    def predict(self):
+        """
+        预测当前画布上绘制的数字。
+        这里可以调用模型进行预测，并更新预测结果标签。
+        """
+        input = self.get_image()  # 获取当前画布上的图像数据
+        # 使用模型进行预测
+        with torch.no_grad():
+            output = self.net(input)
+        # 获取预测结果
+        print(output)
+        probabilities = torch.softmax(output, dim=1).cpu().numpy()
+        print(probabilities)
+
+    def get_net(self):
+        """
+        获取数字预测模型。
+        返回一个 DigitCNN 模型实例。
+        """
+        # 创建并返回一个 DigitCNN 模型实例
+        net = DigitCNN()
+        net.eval()
+        net.cuda()
+        # net.load_state_dict(torch.load('./digit_model.pth'))
+        return net
 
 
 if __name__ == '__main__':
