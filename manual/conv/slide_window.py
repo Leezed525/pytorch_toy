@@ -13,6 +13,7 @@ class ManualSlideWindowConv():
     手动实现卷积操作，使用滑动窗口方式
     没有实现反向传播功能
     """
+
     def __init__(self, kernel_size, in_channel, out_channel, stride=1, padding=0, bias=True):
         self.kernel_size = kernel_size
         self.in_channel = in_channel
@@ -31,6 +32,14 @@ class ManualSlideWindowConv():
     def print_weight(self):
         print("Weight shape:", self.weight.shape)
         print("Weight values:\n", self.weight)
+
+    def get_weight(self):
+        return self.weight
+
+    def set_weight(self, weight):
+        if weight.shape != self.weight.shape:
+            raise ValueError(f"Weight shape mismatch: expected {self.weight.shape}, got {weight.shape}")
+        self.weight = weight
 
     def __call__(self, x, *args, **kwargs):
         if self.padding > 0:
