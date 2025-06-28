@@ -53,11 +53,6 @@ class ManualSlideWindowConv():
         for channel in range(self.out_channel):
             # 取出当前输出通道的权重
             kernel = self.weight[channel, :, :, :]
-            # 添加bias
-            if self.bias is not None:
-                output[:, channel, :, :] += self.bias[channel]
-            else:
-                output[:, channel, :, :] = 0
             for i, end_height in enumerate(range(kernel_size - 1, height, self.stride)):
                 for j, end_width in enumerate(range(kernel_size - 1, width, self.stride)):
                     # 取出图像的滑动窗口
@@ -68,7 +63,13 @@ class ManualSlideWindowConv():
                     result = np.sum(kernel * window, axis=(1, 2, 3))
                     output[:, channel, i, j] += result
 
+        if self.bias is not None:
+            # 偏置的形状是 (out_channel,)
+            # 我们需要将其广播到 (batch_size, out_channel, out_height, out_width)
+            output += self.bias.reshape(1, -1, 1, 1)  # 1, -1, 1, 1 表示在 out_channel 维度上展开，其他维度广播
+
         return output
+
 
 
 if __name__ == '__main__':

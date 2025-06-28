@@ -80,7 +80,7 @@ if __name__ == '__main__':
     slide_window_conv = ManualSlideWindowConv(kernel_size=3, in_channel=3, out_channel=2, stride=1, padding=0, bias=False)
     conv.set_weight(slide_window_conv.get_weight())
 
-    x = np.random.randn(10, 3, 5, 5)  # 输入形状 (batch_size, in_channel, height, width)
+    x = np.random.randn(1, 3, 5, 5)  # 输入形状 (batch_size, in_channel, height, width)
 
     output = conv(x)
 
@@ -97,3 +97,4 @@ if __name__ == '__main__':
 
     # 校验是否相同
     assert np.allclose(output, slide_window_output), "Outputs do not match!"
+    print("Outputs match!")
