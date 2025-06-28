@@ -63,12 +63,12 @@ class ManualMatMulConv():
         unfolded_x = np.transpose(unfolded_x, (1, 0, 2))  # shape: (batch_size, num_windows, in_channel * kernel_size * kernel_size)
         # 使用矩阵乘法计算卷积
         output = np.matmul(unfolded_x, weight_matrix.T)
+
+        output = np.transpose(output, (0, 2, 1))
         output = output.reshape(batch_size, self.out_channel, out_height, out_width)
         # 添加bias
         if self.bias is not None:
             output += self.bias.reshape(1, -1, 1, 1)
-        else:
-            output = np.zeros_like(output)
         # 输出结果
 
         return output
@@ -90,7 +90,9 @@ if __name__ == '__main__':
     print("slide_window_output shape:", slide_window_output.shape)
 
     assert np.allclose(conv.get_weight(), slide_window_conv.get_weight()), "Weights do not match!"
+    print("output:")
     print(output)
+    print("slide_window_output:")
     print(slide_window_output)
 
     # 校验是否相同
