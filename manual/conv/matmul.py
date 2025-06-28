@@ -50,7 +50,7 @@ class ManualMatMulConv():
         out_height = (height - kernel_size) // self.stride + 1
         out_width = (width - kernel_size) // self.stride + 1
         # 将权重转换为矩阵形式
-        weight_matrix = self.weight.reshape(self.out_channel, -1)
+        weight_matrix = self.weight.reshape(self.out_channel, -1)  # shape (out_channel, in_channel * kernel_size * kernel_size)
         # 将输入转为矩阵形式 手写unfold方式
         unfolded_x = []
         for i in range(0, height - kernel_size + 1, self.stride):
@@ -62,9 +62,9 @@ class ManualMatMulConv():
         unfolded_x = np.array(unfolded_x)  # shape: (num_windows, batch_size, in_channel * kernel_size * kernel_size)
         unfolded_x = np.transpose(unfolded_x, (1, 0, 2))  # shape: (batch_size, num_windows, in_channel * kernel_size * kernel_size)
         # 使用矩阵乘法计算卷积
-        output = np.matmul(unfolded_x, weight_matrix.T)
+        output = np.matmul(unfolded_x, weight_matrix.T)  # shape (batch_size, num_windows, out_channel)
 
-        output = np.transpose(output, (0, 2, 1))
+        output = np.transpose(output, (0, 2, 1))  # shape (batch_size, out_channel, num_windows)
         output = output.reshape(batch_size, self.out_channel, out_height, out_width)
         # 添加bias
         if self.bias is not None:
@@ -76,11 +76,11 @@ class ManualMatMulConv():
 
 if __name__ == '__main__':
     # 测试代码
-    conv = ManualMatMulConv(kernel_size=3, in_channel=1, out_channel=2, stride=1, padding=0, bias=False)
-    slide_window_conv = ManualSlideWindowConv(kernel_size=3, in_channel=1, out_channel=2, stride=1, padding=0, bias=False)
+    conv = ManualMatMulConv(kernel_size=3, in_channel=3, out_channel=2, stride=1, padding=0, bias=False)
+    slide_window_conv = ManualSlideWindowConv(kernel_size=3, in_channel=3, out_channel=2, stride=1, padding=0, bias=False)
     conv.set_weight(slide_window_conv.get_weight())
 
-    x = np.random.randn(1, 1, 5, 5)  # 输入形状 (batch_size, in_channel, height, width)
+    x = np.random.randn(10, 3, 5, 5)  # 输入形状 (batch_size, in_channel, height, width)
 
     output = conv(x)
 
@@ -97,5 +97,3 @@ if __name__ == '__main__':
 
     # 校验是否相同
     assert np.allclose(output, slide_window_output), "Outputs do not match!"
-
-
