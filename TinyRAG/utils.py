@@ -18,8 +18,10 @@ from tqdm import tqdm
 import tiktoken
 from bs4 import BeautifulSoup
 import re
+from TinyRAG import base_tiktoken_dir
 
-enc = tiktoken.get_encoding("cl100k_base")
+os.environ["TIKTOKEN_CACHE_DIR"] = base_tiktoken_dir
+enc = tiktoken.get_encoding("cl100k_base") # 用于计算文本长度的编码器
 
 
 class ReadFiles:
@@ -67,8 +69,9 @@ class ReadFiles:
         lines = text.splitlines()  # 假设以换行符分割文本为行
 
         for line in lines:
-            line = line.replace(' ', '')
+            # line = line.replace(' ', '') # 注释掉这行 保留空格
             line_len = len(enc.encode(line))
+            print(line_len, line)
             if line_len > max_token_len:
                 # 如果单行长度就超过限制，则将其分割成多个块
                 num_chunks = (line_len + token_len - 1) // token_len
@@ -157,3 +160,36 @@ class Documents:
         with open(self.path, mode='r', encoding='utf-8') as f:
             content = json.load(f)
         return content
+
+
+
+if __name__ == '__main__':
+
+    s = """
+    这是一个测试文本，用于检查文本分割功能。
+    这段文本应该被分割成多个块，以便适应指定的最大长度。
+    每个块的长度不应超过600个token，且每个块的前150个字符应被覆盖。
+    这段文本的长度应该足够长，以便测试分割功能的有效性。
+    随机生成一段超过600个字符的长文本
+    以确保分割功能能够正确处理长文本。
+    
+    用户刚刚问我是否会保留空格，我得先回顾一下之前的对话内容，用户之前关注的是不同模型对文本的处理方式以及空格和符号的处理。在这个背景下，我被问到是否保留空格，这表明用户想要了解我自身的文本处理机制，可能对我处理文本的具体细节感兴趣或者想进一步比较不同模型的处理方式。
+我清楚地知道，我作为一个人工智能助手，我的文本处理机制是按照既定的规则和模型架构设计的，这些设计就是在服务用户的过程中经过大量数据训练和优化而来的。对于用户的这个问题，我的回答要基于我自身的模型架构和设计目标，同时也要符合实际情况，不能夸大或者虚构我的功能。
+在分析了用户的问题后，我决定从我自身的设计和功能出发，直白且准确地回答用户的问题。我思考着，既然我的设计决定了我在处理用户输入时会保留空格，那我就直接告诉用户这个事实，这样可以满足用户对我的文本处理机制的好奇，也能体现出我的回答是基于实际情况的，而不是无端猜测或者随意编造的。
+我准备直接回答用户的问题，把我的处理方式说明清楚，这样既能满足用户的好奇心，也能体现出我的诚实和可靠。
+    This is a test text to check the text segmentation function.
+    This text should be split into multiple chunks to fit the specified maximum length.
+    Each chunk should not exceed 600 tokens, and the first 150 characters of each chunk should be covered.
+    This text should be long enough to test the effectiveness of the segmentation function.
+    Randomly generate a long text that exceeds 600 characters
+    to ensure that the segmentation function can correctly handle long texts.
+    The user just asked me if I would keep spaces, and I need to review the previous conversation content first. The user was previously concerned about how different models handle text, including spaces and punctuation. In this context, I was asked whether I retain spaces, indicating that the user is interested in understanding my own text processing mechanism, possibly to compare it with other models.
+I clearly know that as an AI assistant, my text processing mechanism is designed according to established rules and model architecture, which have been trained and optimized through a large amount of data in the process of serving users. Regarding the user's question, my answer should be based on my own model architecture and design goals, while also conforming to the actual situation, without exaggerating or fabricating my capabilities.
+I analyzed the user's question and decided to answer it directly and accurately based on my own design and functionality. I thought, since my design determines that I will retain spaces when processing user input, I would just tell the user this fact, which can satisfy the user's curiosity about my text processing mechanism and also reflect that my answer is based on actual conditions, rather than unfounded speculation or random fabrication.
+    """
+
+    res = ReadFiles.get_chunk(s, max_token_len=600, cover_content=150)
+    for i, r in enumerate(res):
+        print(f"Chunk {i+1}: {r}\n")
+
+

@@ -20,9 +20,17 @@ TinyRAG是一个轻量级的RAG（Retrieval-Augmented Generation）框架(暂未
 
 # 环境准备
 
+## embedding 环境准备
+~~~bash 
+pip install transformers
+pip install sentence-transformers
 ~~~
 
-~~~
+## 文档切分环境准备
+
+```bash
+pip install PyPDF2 markdown html2text tiktoken
+```
 
 
 
