@@ -25,7 +25,7 @@ pip install sentence-transformers
 
 ## BGE-Base
 
-GTE模型是一个北京智源人工智能研究院（BAAI）发布的开源模型，旨在为中文文本生成高质量的向量表示。
+BGE模型是一个北京智源人工智能研究院（BAAI）发布的开源模型，旨在为中文文本生成高质量的向量表示。
 
 ### 下载模型
 

@@ -1,5 +1,3 @@
-import numpy as np
-
 
 class BaseEmbedding:
     def __init__(self,
