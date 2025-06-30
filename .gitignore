@@ -2,3 +2,4 @@
 *.pth
 *.gz
 dataset_file/mnist_raw
+**/.cache

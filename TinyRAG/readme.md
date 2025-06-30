@@ -17,8 +17,17 @@ TinyRAG是一个轻量级的RAG（Retrieval-Augmented Generation）框架(暂未
 | 检索模块      | 根据 Query 检索相关的文档片段 | 未实现  |
 | 大模型模块     | 根据检索出来的文档回答用户的问题   | 未实现  |
 
+
+# 环境准备
+
+~~~
+
+~~~
+
+
+
 # 参考资料
 
-[动手实现一个最小RAG——TinyRAGhttps://zhuanlan.zhihu.com/p/685989556](https://zhuanlan.zhihu.com/p/685989556)
+[动手实现一个最小RAG——TinyRAG https://zhuanlan.zhihu.com/p/685989556](https://zhuanlan.zhihu.com/p/685989556)
 
 
