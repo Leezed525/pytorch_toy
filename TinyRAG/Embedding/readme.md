@@ -37,5 +37,4 @@ model = SentenceTransformer('BAAI/bge-large-zh-v1.5')
 q_embeddings = model.encode([instruction+q for q in queries], normalize_embeddings=True)
 p_embeddings = model.encode(passages, normalize_embeddings=True)
 scores = q_embeddings @ p_embeddings.T
-
 ```
