@@ -19,3 +19,4 @@ if __name__ == '__main__':
     q_embeddings = BGE.model.encode([instruction + q for q in queries], normalize_embeddings=True)
     p_embeddings = BGE.model.encode(passages, normalize_embeddings=True)
     scores = q_embeddings @ p_embeddings.T
+    print(scores)
