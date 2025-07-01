@@ -15,15 +15,11 @@ class VectorStore:
         """
         pass
 
-    def get_vector(self, EmbeddingModel: BaseEmbedding) -> List[List[float]]:
-        # 获得文档的向量表示
-        raise NotImplementedError("This method should be overridden by subclasses.")
-
-    def persist(self, path: str = 'storage'):
+    def persist(self, file_path):
         # 数据库持久化，本地保存
         raise NotImplementedError("This method should be overridden by subclasses.")
 
-    def load_vector(self, path: str = 'storage'):
+    def load_vector(self):
         # 从本地加载数据库
         raise NotImplementedError("This method should be overridden by subclasses.")
 

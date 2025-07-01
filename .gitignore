@@ -3,3 +3,4 @@
 *.gz
 dataset_file/mnist_raw
 **/.cache
+vector.json
