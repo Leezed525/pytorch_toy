@@ -92,7 +92,8 @@ class LocalVectorBase(VectorStore):
         # 取出self.vectors中的所有向量
         all_embeddings = np.array([vector['embedding'] for vector in self.vectors.values()])
         # 计算查询向量与所有向量的相似度
-        similarities = np.dot(all_embeddings, query_embedding)
+        # similarities = np.dot(all_embeddings, query_embedding)
+        similarities = self.embedding_model.similarity(query_embedding,all_embeddings)
         # 获取相似度最高的k个索引
         top_k_indices = np.argsort(similarities)[-k:][::-1]
         # 返回相似度最高的k个文档片段

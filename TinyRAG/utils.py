@@ -192,16 +192,8 @@ I analyzed the user's question and decided to answer it directly and accurately 
     res = ReadFiles.get_chunk(s, max_token_len=600, cover_content=150)
 
     embedding_model = BGEBaseZH()
-
     embeddings = embedding_model.get_embedding(res)
     print(embeddings.shape)
-
-    # for i, r in enumerate(res):
-    #     print(f"Processing chunk {i+1}/{len(res)}")
-    #     print(f"Chunk content{i + 1}: {r}")
-    #     embedding = embedding_model.get_embedding(r)
-    #     embeddings.append(embedding)
-    #     print(embedding.shape)
 
     print("All chunks processed.")
 

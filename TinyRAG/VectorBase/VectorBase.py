@@ -3,9 +3,7 @@
 @Author  ：Leezed
 @Date    ：2025/6/30 23:21 
 """
-
 from typing import List
-from TinyRAG.Embedding.BaseEmbedding import BaseEmbedding
 
 
 class VectorStore:
