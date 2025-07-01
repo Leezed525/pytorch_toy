@@ -19,6 +19,7 @@ import tiktoken
 from bs4 import BeautifulSoup
 import re
 from TinyRAG import base_tiktoken_dir
+from TinyRAG.Embedding.BGE_base_zh import BGEBaseZH
 
 os.environ["TIKTOKEN_CACHE_DIR"] = base_tiktoken_dir
 enc = tiktoken.get_encoding("cl100k_base") # 用于计算文本长度的编码器
@@ -71,7 +72,7 @@ class ReadFiles:
         for line in lines:
             # line = line.replace(' ', '') # 注释掉这行 保留空格
             line_len = len(enc.encode(line))
-            print(line_len, line)
+            # print(line_len, line)
             if line_len > max_token_len:
                 # 如果单行长度就超过限制，则将其分割成多个块
                 num_chunks = (line_len + token_len - 1) // token_len
@@ -189,7 +190,19 @@ I analyzed the user's question and decided to answer it directly and accurately 
     """
 
     res = ReadFiles.get_chunk(s, max_token_len=600, cover_content=150)
-    for i, r in enumerate(res):
-        print(f"Chunk {i+1}: {r}\n")
+
+    embedding_model = BGEBaseZH()
+
+    embeddings = embedding_model.get_embedding(res)
+    print(embeddings.shape)
+
+    # for i, r in enumerate(res):
+    #     print(f"Processing chunk {i+1}/{len(res)}")
+    #     print(f"Chunk content{i + 1}: {r}")
+    #     embedding = embedding_model.get_embedding(r)
+    #     embeddings.append(embedding)
+    #     print(embedding.shape)
+
+    print("All chunks processed.")
 
 

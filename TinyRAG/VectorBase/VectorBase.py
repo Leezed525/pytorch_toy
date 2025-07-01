@@ -9,8 +9,11 @@ from TinyRAG.Embedding.BaseEmbedding import BaseEmbedding
 
 
 class VectorStore:
-    def __init__(self, document: List[str] = ['']) -> None:
-        self.document = document
+    def __init__(self) -> None:
+        """
+        初始化向量存储类
+        """
+        pass
 
     def get_vector(self, EmbeddingModel: BaseEmbedding) -> List[List[float]]:
         # 获得文档的向量表示

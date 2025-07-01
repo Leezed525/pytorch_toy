@@ -5,8 +5,8 @@ from TinyRAG import base_embedding_dir
 
 class BGEBaseZH(BaseEmbedding):
     def __init__(self):
-        super().__init__(path=base_embedding_dir, device='cpu')
-        self.model = SentenceTransformer('BAAI/bge-large-zh-v1.5', cache_folder=self.path,device=self.device)
+        super().__init__(path=base_embedding_dir, device='cuda')
+        self.model = SentenceTransformer('BAAI/bge-large-zh-v1.5', cache_folder=self.path, device=self.device)
         self.max_sequence_length = 512
 
     def get_embedding(self, text):
@@ -36,5 +36,7 @@ if __name__ == '__main__':
 
     q_embeddings = BGE.model.encode([instruction + q for q in queries], normalize_embeddings=True)
     p_embeddings = BGE.model.encode(passages, normalize_embeddings=True)
+    print(q_embeddings)
+    print(type(q_embeddings))
     scores = q_embeddings @ p_embeddings.T
     print(scores)
