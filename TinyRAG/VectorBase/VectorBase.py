@@ -23,6 +23,6 @@ class VectorStore:
         # 从本地加载数据库
         raise NotImplementedError("This method should be overridden by subclasses.")
 
-    def query(self, query: str, EmbeddingModel: BaseEmbedding, k: int = 1) -> List[str]:
+    def query(self, query: str,  k: int = 1) -> List[str]:
         # 根据问题检索相关的文档片段
         raise NotImplementedError("This method should be overridden by subclasses.")

@@ -6,12 +6,14 @@
 import os
 
 from TinyRAG.VectorBase.VectorBase import VectorStore
-from TinyRAG import base_local_vector_base_dir,base_data_dir
+from TinyRAG import base_local_vector_base_dir, base_data_dir
 from TinyRAG.utils import ReadFiles
 import json
 from TinyRAG.Embedding.BaseEmbedding import BaseEmbedding
 from TinyRAG.Embedding.BGE_base_zh import BGEBaseZH
 import hashlib
+import numpy as np
+from typing import List
 
 
 class LocalVectorBase(VectorStore):
@@ -68,6 +70,8 @@ class LocalVectorBase(VectorStore):
         with open(self.vector_file, 'w', encoding='utf-8') as f:
             json.dump(existing_vectors, f, ensure_ascii=False, indent=4)
 
+        self.vectors = existing_vectors
+
     def load_vector(self):
         """
         从本地加载数据库
@@ -76,8 +80,40 @@ class LocalVectorBase(VectorStore):
             vectors = json.load(f)
         return vectors
 
+    def query(self, query: str, k: int = 1) -> List[str]:
+        """
+        根据问题检索相关的文档片段
+        :param query: 查询字符串
+        :param EmbeddingModel: 嵌入模型
+        :param k: 返回的结果数量
+        :return: 文档片段列表
+        """
+        query_embedding = self.embedding_model.get_embedding(query)
+        # 取出self.vectors中的所有向量
+        all_embeddings = np.array([vector['embedding'] for vector in self.vectors.values()])
+        # 计算查询向量与所有向量的相似度
+        similarities = np.dot(all_embeddings, query_embedding)
+        # 获取相似度最高的k个索引
+        top_k_indices = np.argsort(similarities)[-k:][::-1]
+        # 返回相似度最高的k个文档片段
+        results = []
+        docs = list(self.vectors.values())
+        for index in top_k_indices:
+            results.append(docs[index]['text'])
+
+        return results
+
+
+
 
 if __name__ == '__main__':
     embedding_model = BGEBaseZH()
     local_vector_base = LocalVectorBase(embedding_model)
-    local_vector_base.persist(base_data_dir)  # 替换为实际的文件路径
+    # local_vector_base.persist(base_data_dir)
+
+    query  = "请你讲讲git push的用法"
+
+    res = local_vector_base.query(query,k = 3)
+    for i, r in enumerate(res):
+        print(f"Result {i + 1}: {r}")
+    # print(res)
