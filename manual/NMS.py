@@ -4,6 +4,7 @@
 @Date    ：2025/7/3 16:59 
 """
 import numpy as np
+import torch
 
 
 def nms_np(boxes, scores, iou_threshold=0.5):
@@ -60,6 +61,60 @@ def nms_np(boxes, scores, iou_threshold=0.5):
     return np.array(selected_indices)
 
 
+def nms_torch(boxes, scores, iou_threshold=0.5):
+    """
+    使用torch来实现非极大值抑制（NMS）
+    :param boxes: 形状为 (N, 4) 的张量，表示 N 个边界框，每个边界框由四个坐标值 (x1, y1, x2, y2) 表示。
+    :param scores: 形状为 (N,) 的张量，表示每个边界框的置信度分数。
+    :param iou_threshold: 浮点数，表示用于抑制的交并比（IoU）阈值。
+    :return:
+    """
+    if len(boxes) == 0:
+        return torch.tensor([])
+
+    # 取出边界框的坐标
+    x1 = boxes[:, 0]
+    y1 = boxes[:, 1]
+    x2 = boxes[:, 2]
+    y2 = boxes[:, 3]
+    # 计算边界框的面积
+    areas = (x2 - x1 + 1) * (y2 - y1 + 1)
+
+    # 排序scores
+    indices = torch.argsort(scores, descending=True)  # 从大到小排序
+    # 保留的检测框索引
+    selected_indices = []
+    while len(indices > 0):
+        # 取出当前分数最高的边界框
+        current_index = indices[0]
+        selected_indices.append(current_index)
+
+        # 取出当前边界框的坐标
+        current_box = boxes[current_index]
+        cx1, cy1, cx2, cy2 = current_box
+        current_area = areas[current_index]
+
+        # 计算其他边界框与当前边界框的交集
+        xx1 = torch.maximum(x1[indices[1:]], cx1)
+        yy1 = torch.maximum(y1[indices[1:]], cy1)
+        xx2 = torch.minimum(x2[indices[1:]], cx2)
+        yy2 = torch.minimum(y2[indices[1:]], cy2)
+
+        # 计算交集面积
+        w = torch.maximum(torch.tensor(0.0), xx2 - xx1 + 1)
+        h = torch.maximum(torch.tensor(0.0), yy2 - yy1 + 1)
+
+        inter_areas = w * h
+        # 计算交并比（IoU）
+        ious = inter_areas / (current_area + areas[indices[1:]] - inter_areas)
+
+        # 保留交并比小于阈值的边界框
+        id = torch.where(ious <= iou_threshold)[0] + 1
+        indices = indices[id]
+
+    return torch.tensor(selected_indices, dtype=torch.int64)
+
+
 if __name__ == '__main__':
     boxes = np.array([[10, 10, 20, 20],
                       [12, 12, 22, 22],
@@ -73,3 +128,8 @@ if __name__ == '__main__':
     print("Selected boxes:", boxes[selected_indices])
     print("Selected scores:", scores[selected_indices])
 
+
+    boxes_torch = torch.tensor(boxes, dtype=torch.float32)
+    scores_torch = torch.tensor(scores, dtype=torch.float32)
+    selected_indices_torch = nms_torch(boxes_torch, scores_torch, iou_threshold)
+    print("Selected indices (torch):", selected_indices_torch)
