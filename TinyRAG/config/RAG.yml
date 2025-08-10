@@ -1,0 +1,6 @@
+model:
+  name: DeepSeek
+
+Api:
+  keys:
+    DeepSeek: !env ${DEEPSEEK_API_KEY}
