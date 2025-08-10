@@ -6,8 +6,8 @@
 import os
 
 from TinyRAG.VectorBase.VectorBase import VectorStore
-from TinyRAG import base_local_vector_base_dir, base_data_dir
-from TinyRAG.utils import ReadFiles
+from TinyRAG import base_local_vector_base_dir,base_data_dir
+from TinyRAG.VectorBase.utils import ReadFiles
 import json
 from TinyRAG.Embedding.BaseEmbedding import BaseEmbedding
 from TinyRAG.Embedding.BGE_base_zh import BGEBaseZH
@@ -110,7 +110,7 @@ class LocalVectorBase(VectorStore):
 if __name__ == '__main__':
     embedding_model = BGEBaseZH()
     local_vector_base = LocalVectorBase(embedding_model)
-    # local_vector_base.persist(base_data_dir)
+    local_vector_base.persist(base_data_dir)
 
     query  = "请你讲讲git push的用法"
 

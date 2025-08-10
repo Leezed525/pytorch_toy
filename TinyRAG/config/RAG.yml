@@ -1,5 +1,13 @@
 model:
   name: DeepSeek
+  embedding:
+    name: BGE_base_zh
+
+embeddings:
+  BGE_base_zh:
+    ClassName: BGEBaseZH
+  GTE_base_zh:
+    ClassName: GTEBaseZH
 api:
   key:
     DeepSeek: !env ${DEEPSEEK_API_KEY}
