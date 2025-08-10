@@ -143,8 +143,3 @@ class YamlUtil():
         """
         with open(self.yaml_file, 'w') as f:
             yaml.safe_dump(self.content, f)
-
-
-if __name__ == '__main__':
-    yaml_util = YamlUtil('../TinyRAG/config', 'RAG.yml')
-    yaml_util.debug()  # 输出当前yaml内容
